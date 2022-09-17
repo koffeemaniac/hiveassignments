@@ -1,0 +1,105 @@
+##author: Kunal Nayyar ##
+## Hive Assignment 1 ##
+
+1. Download vehicle sales data -> https://github.com/shashank-mishra219/Hive-Class/blob/main/sales_order_data.csv
+2. Store raw data into hdfs location
+>hadoop fs -mkdir /tmp/hive/rawdata
+>hadoop fs -copyFromLocal sales_order_data.csv /tmp/hive/rawdata/
+
+3. Create an internal hive table "sales_order_csv" which will store csv data sales_order_csv ... make sure to skip header row while creating table
+>create table sales_order_csv(ORDERNUMBER int,QUANTITYORDERED int,PRICEEACH float,ORDERLINENUMBER int,SALES float,STATUS string,QTR_ID int,MONTH_ID int,YEAR_ID int,PRODUCTLINE string,MSRP int,PRODUCTCODE string,PHONE string,CITY string,STATE string,POSTALCODE string,COUNTRY string,TERRITORY string,CONTACTLASTNAME string,
+CONTACTFIRSTNAME string,DEALSIZE string) row format delimited fields terminated by ',' tblproperties('skip.header.line.count' = '1');
+
+4. Load data from hdfs path into "sales_order_csv" 
+>load data inpath '/tmp/hive/rawdata/' to table sales_order_csv;
+
+5. Create an internal hive table which will store data in ORC format "sales_order_orc"
+> create table sales_order_orc(ORDERNUMBER int,QUANTITYORDERED int,PRICEEACH float,ORDERLINENUMBER int,SALES float,STATUS string,QTR_ID int,MONTH_ID int,YEAR_ID int,PRODUCTLINE string,MSRP int,PRODUCTCODE string,PHONE string,CITY string,STATE string,POSTALCODE string,COUNTRY string,TERRITORY string,CONTACTLASTNAME string,CONTACTFIRSTNAME string,DEALSIZE string) stored as orc;
+
+6. Load data from "sales_order_csv" into "sales_order_orc"
+>from sales_order_csv insert overwrite table sales_order_orc select *;
+
+7.Perform below mentioned queries on "sales_order_orc" table:
+a. Calculate total sales per year
+>select sum(sales), year_id from sales_order_orc group by year_id;
+3516979.547241211	2003
+4724162.593383789	2004
+1791486.7086791992	2005
+
+b. Find a product for which maximum orders were placed
+>select count(productcode) as totalorders,productcode from sales_order_orc group by productcode order by totalorders desc limit 1;
+totalorders	productcode
+52	S18_3232
+
+c. Calculate the total sales for each quarter
+>select sum(sales) as totalsales,qtr_id as quarter from sales_order_orc group by qtr_id order by qtr_id;
+totalsales	quarter
+2350817.726501465	1
+2048120.3029174805	2
+1758910.808959961	3
+3874780.010925293	4
+
+d. In which quarter sales was minimum
+> select sum(sales) as totalsales,qtr_id as quarter from sales_order_orc group by qtr_id order by totalsales limit 1;
+totalsales	quarter
+1758910.808959961	3
+
+e. In which country sales was maximum and in which country sales was minimum
+>select sum(sales) as totalsales,country from sales_order_orc group by country order by totalsales limit 1;
+totalsales	country
+57756.43029785156	Ireland
+>select sum(sales) as totalsales,country from sales_order_orc group by country order by totalsales desc limit 1;
+totalsales	country
+3627982.825744629	USA
+
+f. Calculate quarterly sales for each city
+> select sum(sales) as quaterlysales,city,qtr_id as quarter from sales_order_orc group by city,qtr_id order by city,qtr_id limit 20;
+quaterlysales	city	quarter
+100595.5498046875	Aaarhus	4
+6166.7998046875	Allentown	2
+71930.61041259766	Allentown	3
+44040.729736328125	Allentown	4
+4219.2001953125	Barcelona	2
+74192.66003417969	Barcelona	4
+56181.320068359375	Bergamo	1
+81774.40008544922	Bergamo	4
+16363.099975585938	Bergen	3
+95277.17993164062	Bergen	4
+31606.72021484375	Boras	1
+53941.68981933594	Boras	3
+48710.92053222656	Boras	4
+74994.240234375	Boston	2
+15344.640014648438	Boston	3
+63730.7802734375	Boston	4
+31474.7802734375	Brickhaven	1
+7277.35009765625	Brickhaven	2
+114974.53967285156	Brickhaven	3
+11528.52978515625	Brickhaven	4
+
+h. Find a month for each year in which maximum number of quantities were sold
+>create table t2 as with q1 as (select sum(quantityordered) as monthlyquantity,year_id,month_id from sales_order_orc group by year_id,month_id order by year_id,month_id) select monthlyquantity,month_id,year_id from q1 where q1.monthlyquantity in (select max(monthlyquantity) from q1 group by year_id);
+Total MapReduce CPU Time Spent: 7 seconds 610 msec
+>select * from t2; 
+t2.monthlyquantity	t2.month_id	t2.year_id
+10179	11	2003
+10678	11	2004
+4357	5	2005
+
+[or Faster way]
+>create table t1 as with q1 as (select sum(quantityordered) as monthlyquantity,year_id,month_id from sales_order_orc group by year_id,month_id order by year_id,month_id) select * from q1;
+>select monthlyquantity,month_id,year_id from t1 where t1.monthlyquantity in (select max(monthlyquantity) from t1 group by year_id);
+Total MapReduce CPU Time Spent: 2 seconds 640 msec
+monthlyquantity	month_id	year_id
+10179	11	2003
+10678	11	2004
+4357	5	2005
+
+[or using partition on year]
+>create table yearpart (monthlyquantity bigint,month_id int)partitioned by (year_id int) stored as orc; 
+>insert overwrite table yearpart partition(year_id) select sum(quantityordered) as monthlyquantity,month_id,year_id from sales_order_orc group by year_id,month_id order by year_id,month_id;
+>select monthlyquantity,month_id,year_id from yearpart where yearpart.monthlyquantity in (select max(monthlyquantity) from yearpart group by year_id);
+Total MapReduce CPU Time Spent: 2 seconds 640 msec
+monthlyquantity	month_id	year_id
+10179	11	2003
+10678	11	2004
+4357	5	2005
