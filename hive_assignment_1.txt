@@ -201,7 +201,7 @@ How will you consume this CSV file into the Hive warehouse using built-in SerDe
 1,"chris","hemsworth","chrishem@gmail.com","male","192.168.0.2"
 
 >create table emp(id int,first_name string,last_name string,email string,gender string,ip_address string) row format serde 'org.apache.hadoop.hive.serde2.OpenCSVSerde' stored as textfile tblproperties("skip.header.line.count"="1");
->load data inpath local '/temp/' into table emp;
+>load data local inpath '/temp/' into table emp;
 
 Q.Suppose, I have a lot of small CSV files present in the input directory in HDFS and I want to create a single Hive table corresponding to these files. The data in these files are in the format: {id, name, e-mail, country}. Now, as we know, Hadoop performance degrades when we use lots of small files.
 So, how will you solve this problem where we want to create a single Hive table for lots of small files without degrading the performance of the system?
