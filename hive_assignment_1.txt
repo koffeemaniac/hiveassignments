@@ -286,3 +286,46 @@ c.id    c.name  o.oid   o.date  o.amount
 NULL    NULL    12      18-04-2022      67
 NULL    NULL    45      09-09-2020      333
 ------------------------------------------------------------------------------------------------------------------------------------------------
+
+BUILD A DATA PIPELINE WITH HIVE
+
+Download a data from the given location - 
+https://archive.ics.uci.edu/ml/machine-learning-databases/00360/
+
+1. Create a hive table as per given schema in your dataset 
+
+>create table airquality(DATE string,TIME string,CO string,TINOXIDE_CO int,NMHC int,C6H6 string,TITANIA_NMHC int,NOX int,TUNGOXIDE_NOX int,NO2 int,TUNGOXIDE_NO2 int,INDIUM_O3 int,TEMPERATURE string,RELATIVE_HUMIDITY string,ABSOLUTE_HUMIDITY string) row format delimited fields terminated by '\u0059' stored as textfile tblproperties("skip.header.line.count"="1");
+
+2. try to place a data into table location
+
+>hadoop fs -copyFromLocal '/home/cloudera/Downloads/AirQualityUCI.csv' hdfs://quickstart.cloudera:8020/user/hive/warehouse/hiveassignment.db/airquality
+>hadoop fs -ls hdfs://quickstart.cloudera:8020/user/hive/warehouse/hiveassignment.db/airquality                                         Found 1 items
+-rw-r--r--   1 cloudera supergroup     785065 2022-09-22 13:30 hdfs://quickstart.cloudera:8020/user/hive/warehouse/hiveassignment.db/airquality/AirQualityUCI.csv
+
+>create view airquality3 as select cast(to_date(from_unixtime(unix_timestamp(DATE ,'dd/MM/yyyy'), 'yyyy-MM-dd')) as date) as DATE,from_unixtime(unix_timestamp(TIME,'HH.MM.SS'), 'HH:MM:SS') as TIME,cast(regexp_replace(CO, ',', '.') as decimal(5,2)) as CO,TINOXIDE_CO,NMHC,cast(regexp_replace(C6H6, ',', '.') as decimal(5,2)) as C6H6,TITANIA_NMHC,NOX,TUNGOXIDE_NOX,NO2,TUNGOXIDE_NO2,INDIUM_O3,cast(regexp_replace(TEMPERATURE, ',', '.') as decimal(5,2)) as TEMPERATURE,cast(regexp_replace(RELATIVE_HUMIDITY, ',', '.') as decimal(5,2)) as RELATIVE_HUMIDITY,cast(regexp_replace(ABSOLUTE_HUMIDITY, ',', '.') as decimal(7,5)) as ABSOLUTE_HUMIDITY from airquality;
+
+3. Perform a select operation 
+
+>select * from airquality3 limit 4;
+airquality3.date        airquality3.time        airquality3.co  airquality3.tinoxide_co   airquality3.nmhc        airquality3.c6h6        airquality3.titania_nmhc airquality3.nox  airquality3.tungoxide_nox       airquality3.no2 airquality3.tungoxide_no2 airquality3.indium_o3   airquality3.temperature airquality3.relative_humidity     airquality3.absolute_humidity
+2004-03-10      18:12:00        2.6     1360    150     11.9    1046    166     1056      113     1692    1268    13.6    48.9    0.7578
+2004-03-10      19:12:00        2       1292    112     9.4     955     103     1174      92      1559    972     13.3    47.7    0.7255
+2004-03-10      20:12:00        2.2     1402    88      9       939     131     1140      114     1555    1074    11.9    54      0.7502
+2004-03-10      21:12:00        2.2     1376    80      9.2     948     172     1092      122     1584    1203    11      60      0.7867
+
+4. Fetch the result of the select operation in your local as a csv file .
+
+
+ 
+5. Perform group by operation . 
+7. Perform filter operation at least 5 kinds of filter examples . 
+8. show and example of regex operation
+9. alter table operation 
+10 . drop table operation
+12 . order by operation . 
+13 . where clause operations you have to perform . 
+14 . sorting operation you have to perform . 
+15 . distinct operation you have to perform . 
+16 . like an operation you have to perform . 
+17 . union operation you have to perform . 
+18 . table view operation you have to perform . 
