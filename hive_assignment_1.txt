@@ -214,3 +214,75 @@ The following statement failed to execute. What can be the cause?
 
 Is it possible to add 100 nodes when we already have 100 nodes in Hive? If yes, how?
 
+------------------------------------------------------------------------------------------------------------------------------------------------
+Hive Practical questions:
+
+Hive Join operations
+
+Create a  table named CUSTOMERS(ID | NAME | AGE | ADDRESS   | SALARY)
+#id,name,address,salary
+#1,dave,123street,3000
+#2,ellen,45avenue,2000
+#3,kevin,62roadstreet,2222
+#4,maggie,82lane,5000
+
+> create table CUSTOMERS(ID INT,NAME STRING,ADDRESS STRING,SALARY BIGINT) row format delimited fields terminated by ',' stored as textfile tblproperties("skip.header.line.count" = "1");
+>load data local inpath '/home/cloudera/bigdata/first.txt' into table CUSTOMERS;
+
+Create a Second  table ORDER(OID | DATE | CUSTOMER_ID | AMOUNT
+)
+#oid,date,customer_id,amount
+#23,23-03-2021,3,210
+#12,18-04-2022,5,67
+#4,03-12-2021,2,89
+#5,03-12-2021,2,22
+#45,09-09-2020,6,333
+#63,21-10-2021,4,1627
+
+> create table ORDERS(OID INT,DATE STRING,CUSTOMER_ID INT,AMOUNT BIGINT) row format delimited fields terminated by ',' stored as textfile tblproperties("skip.header.line.count" = "1");
+>load data local inpath '/home/cloudera/bigdata/second.txt' into table ORDERS;
+
+Now perform different joins operations on top of these tables
+(Inner JOIN, LEFT OUTER JOIN ,RIGHT OUTER JOIN ,FULL OUTER JOIN)
+
+#INNER JOIN
+>select c.id,c.name,o.oid,o.date,o.amount from customers as c join orders as o on c.id = o.customer_id;
+c.id    c.name  o.oid   o.date  o.amount
+3       kevin   23      23-03-2021      210
+2       ellen   4       03-12-2021      89
+2       ellen   5       03-12-2021      22
+4       maggie  63      21-10-2021      1627
+
+#LEFT OUTER JOIN
+>select c.id,c.name,o.oid,o.date,o.amount from customers as c left join orders as o on c.id = o.customer_id;
+c.id    c.name  o.oid   o.date  o.amount
+1       dave    NULL    NULL    NULL
+2       ellen   4       03-12-2021      89
+2       ellen   5       03-12-2021      22
+3       kevin   23      23-03-2021      210
+4       maggie  63      21-10-2021      1627
+
+
+
+#RIGHT OUTER JOIN
+>select c.id,c.name,o.oid,o.date,o.amount from customers as c right join orders as o on c.id = o.customer_id;
+c.id    c.name  o.oid   o.date  o.amount
+3       kevin   23      23-03-2021      210
+NULL    NULL    12      18-04-2022      67
+2       ellen   4       03-12-2021      89
+2       ellen   5       03-12-2021      22
+NULL    NULL    45      09-09-2020      333
+4       maggie  63      21-10-2021      1627
+
+#FULL OUTER JOIN
+>select c.id,c.name,o.oid,o.date,o.amount from customers as c left join orders as o on c.id = o.customer_id;
+
+c.id    c.name  o.oid   o.date  o.amount
+1       dave    NULL    NULL    NULL
+2       ellen   5       03-12-2021      22
+2       ellen   4       03-12-2021      89
+3       kevin   23      23-03-2021      210
+4       maggie  63      21-10-2021      1627
+NULL    NULL    12      18-04-2022      67
+NULL    NULL    45      09-09-2020      333
+------------------------------------------------------------------------------------------------------------------------------------------------
