@@ -206,13 +206,21 @@ How will you consume this CSV file into the Hive warehouse using built-in SerDe
 Q.Suppose, I have a lot of small CSV files present in the input directory in HDFS and I want to create a single Hive table corresponding to these files. The data in these files are in the format: {id, name, e-mail, country}. Now, as we know, Hadoop performance degrades when we use lots of small files.
 So, how will you solve this problem where we want to create a single Hive table for lots of small files without degrading the performance of the system?
 
-
+Using sequenceFile format can help create a single hive table for all small files.
+>create table small(id int, name string, e-mail string, country string) row format delimited fields terminated by ',' stored as textfile;
+>load data inpath '/home/cloudera/Downloads/' into table small;
+>create table single(id int, name string, e-mail string, country string) row format delimited fields terminated by ',' stored as sequencefile;
+>insert overwrite table single select * from small;
 
 Q.LOAD DATA LOCAL INPATH ‘Home/country/state/’
 OVERWRITE INTO TABLE address;
 The following statement failed to execute. What can be the cause?
 
-Is it possible to add 100 nodes when we already have 100 nodes in Hive? If yes, how?
+Directory is given instead of complete filename along with it's path. 
+
+Q. Is it possible to add 100 nodes when we already have 100 nodes in Hive? If yes, how?
+
+Yes by setting a new system,adding rsa public keys in /etc/hosts to access the system using ssh (start the data node on the new system) and run jps on the new node to make sure all required nodes are running
 
 ------------------------------------------------------------------------------------------------------------------------------------------------
 Hive Practical questions:
